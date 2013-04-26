@@ -2,7 +2,7 @@
 
 use Config, App;
 
-class AcceptanceTestCase extends TestCase
+class IntegrationTestCase extends TestCase
 {
     static protected $seleniumLaunched = false;
 
@@ -21,10 +21,10 @@ class AcceptanceTestCase extends TestCase
     public static function tearDownAfterClass()
     {
         static::killServer();
-        if(AcceptanceTestCase::$loadedBrowser)
+        if(IntegrationTestCase::$loadedBrowser)
         {
-            AcceptanceTestCase::$loadedBrowser->stop();
-            AcceptanceTestCase::$loadedBrowser = null;
+            IntegrationTestCase::$loadedBrowser->stop();
+            IntegrationTestCase::$loadedBrowser = null;
         }
     }
 
@@ -124,18 +124,18 @@ class AcceptanceTestCase extends TestCase
         );
         App::setRequestForConsoleEnvironment(); // This is a must
 
-        if(! AcceptanceTestCase::$loadedBrowser)
+        if(! IntegrationTestCase::$loadedBrowser)
         {
             $client  = new Selenium\Client('localhost', 4444);
             $this->browser = $client->getBrowser('http://localhost:4443');
             $this->browser->start();
             $this->browser->windowMaximize();
 
-            AcceptanceTestCase::$loadedBrowser = $this->browser;
+            IntegrationTestCase::$loadedBrowser = $this->browser;
         }
         else
         {
-            $this->browser = AcceptanceTestCase::$loadedBrowser;
+            $this->browser = IntegrationTestCase::$loadedBrowser;
             $this->browser->open('/');
         }
         
@@ -143,7 +143,7 @@ class AcceptanceTestCase extends TestCase
 
     protected static function launchSelenium()
     {
-        if(AcceptanceTestCase::$seleniumLaunched)
+        if(IntegrationTestCase::$seleniumLaunched)
             return;
 
         if(@fsockopen('localhost', 4444) == false)
@@ -170,30 +170,30 @@ class AcceptanceTestCase extends TestCase
                 );
         }
 
-        AcceptanceTestCase::$seleniumLaunched = true;
+        IntegrationTestCase::$seleniumLaunched = true;
     }
 
     protected static function launchServer()
     {
-        if(AcceptanceTestCase::$serverLaunched)
+        if(IntegrationTestCase::$serverLaunched)
             return;
 
         $command = "php artisan serve --port 4443";
         static::execAsync($command);
 
-        AcceptanceTestCase::$serverLaunched = true;
+        IntegrationTestCase::$serverLaunched = true;
     }
 
     protected static function killSelenium()
     {
         static::killProcessByPort('4444');
-        AcceptanceTestCase::$seleniumLaunched = false;
+        IntegrationTestCase::$seleniumLaunched = false;
     }
 
     protected static function killServer()
     {
         static::killProcessByPort('4443');
-        AcceptanceTestCase::$serverLaunched = false;
+        IntegrationTestCase::$serverLaunched = false;
     }
 
     private static function execAsync($command)
