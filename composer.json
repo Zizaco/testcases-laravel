@@ -16,7 +16,7 @@
     },
     "suggest": {
         "mockery/mockery": "Mockery is a simple yet flexible PHP mock object framework",
-        "GuilhermeGuitte/behat-laravel": "A solution test your application using the BDD methodology",
+        "GuilhermeGuitte/behat-laravel": "A solution test your application using the BDD methodology"
     },
     "autoload": {
         "psr-0": {
