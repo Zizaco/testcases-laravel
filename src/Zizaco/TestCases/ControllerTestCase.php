@@ -1,7 +1,7 @@
 <?php namespace Zizaco\TestCases;
 
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Route, Config, URL;
+use Route, Config, URL, Session;
 
 class ControllerTestCase extends TestCase{
 
