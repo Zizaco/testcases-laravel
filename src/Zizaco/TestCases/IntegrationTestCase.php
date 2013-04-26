@@ -126,7 +126,7 @@ class IntegrationTestCase extends TestCase
 
         if(! IntegrationTestCase::$loadedBrowser)
         {
-            $client  = new Selenium\Client('localhost', 4444);
+            $client  = new \Selenium\Client('localhost', 4444);
             $this->browser = $client->getBrowser('http://localhost:4443');
             $this->browser->start();
             $this->browser->windowMaximize();
