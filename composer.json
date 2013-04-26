@@ -1,0 +1,27 @@
+{
+    "name": "zizaco/testcases-laravel",
+    "description": "Some classes to help write tests for laravel 4 applications",
+    "keywords": ["laravel","illuminate","test","tdd","testcase","phpunit"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Zizaco Zizuini",
+            "email": "zizaco@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0",
+        "illuminate/support": "4.0.x",
+        "alexandresalome/php-selenium": "1.0.1"
+    },
+    "suggest": {
+        "mockery/mockery": "Mockery is a simple yet flexible PHP mock object framework",
+        "GuilhermeGuitte/behat-laravel": "A solution test your application using the BDD methodology",
+    },
+    "autoload": {
+        "psr-0": {
+            "Zizaco\\TestCases": "src/"
+        }
+    },
+    "minimum-stability": "dev"
+}
