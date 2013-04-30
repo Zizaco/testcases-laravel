@@ -10,7 +10,14 @@ class IntegrationTestCase extends TestCase
 
     static protected $loadedBrowser = null;
 
+    static protected $seleniumOptions = null;
+
     public $browser;
+
+    public static function setSeleniumOptions($options)
+    {
+        self::$seleniumOptions = $options;
+    }
 
     public static function setUpBeforeClass()
     {
@@ -143,10 +150,11 @@ class IntegrationTestCase extends TestCase
 
     protected static function launchSelenium()
     {
+
         if(IntegrationTestCase::$seleniumLaunched)
             return;
-
-        if(@fsockopen('localhost', 4444) == false)
+        $socket = @fsockopen('localhost', 4444);
+        if($socket == false)
         {
             $seleniumFound = false;
             $seleniumDir = $_SERVER['HOME'].'/.selenium';
@@ -156,7 +164,10 @@ class IntegrationTestCase extends TestCase
                 if(substr($file,-4) == '.jar')
                 {
                     $command = "java -jar $seleniumDir/$file";
-                    static::execAsync($command);
+                    if ( self::$seleniumOptions ) {
+                        $command .= " " . self::$seleniumOptions;
+                    }
+                    static::execAsyncAndWaitFor($command, 'org.openqa.jetty.jetty.Server');
                     $seleniumFound = true;
                     break;
                 }
@@ -179,7 +190,7 @@ class IntegrationTestCase extends TestCase
             return;
 
         $command = "php artisan serve --port 4443";
-        static::execAsync($command);
+        static::execAsyncAndWaitFor($command, 'development server started');
 
         IntegrationTestCase::$serverLaunched = true;
     }
@@ -196,10 +207,34 @@ class IntegrationTestCase extends TestCase
         IntegrationTestCase::$serverLaunched = false;
     }
 
-    private static function execAsync($command)
+    private static function execAsync($command, $output_path = '/dev/null')
     {
-        $force_async = " >/dev/null 2>&1 &";
+        $force_async = " > $output_path 2>&1 &";
         exec($command.$force_async);
+    }
+
+    private static function execAsyncAndWaitFor($command, $content, $timeout = 30)
+    {
+        $output_path = "/tmp/zizaco-".str_shuffle(MD5(microtime()));
+        self::execAsync($command, $output_path);
+        self::waitForOutput($output_path, $content, $timeout);
+    }
+    private static function waitForOutput($file, $output) {
+        $found = FALSE;
+        $max_tries = 30;
+        $num_tries = 0;
+        while ( !$found ) {
+            $contents = file_get_contents($file);
+            // var_dump($contents);
+            if ( strstr($contents, $output) ) {
+                $found = TRUE;
+            } else {
+                if ( ++$num_tries > $max_tries ) {
+                    throw new \Exception("Failed to find $output in $file");
+                }
+                sleep(1);
+            }
+        }
     }
 
     private static function killProcessByPort($port)
