@@ -180,9 +180,14 @@ class ControllerTestCase extends TestCase{
         }
     }
 
+    public function getBodyHtml()
+    {
+        return $this->crawler->html();
+    }
+
     public function assertBodyHasHtml($needle)
     {
-        $html = $this->crawler->html();
+        $html = $this->getBodyHtml();
 
         $needle = (array)$needle;
 
@@ -191,12 +196,19 @@ class ControllerTestCase extends TestCase{
         }
     }
 
-    public function assertBodyHasText($needle)
+    public function getBodyText()
     {
-        $text = $this->crawler->html();
+        $text = $this->getBodyHtml();
         $text = strip_tags($text); // Strip tags
         $text = str_replace("\n", " ", $text); // Replaces newline with space
         $text = preg_replace('/\s\s+/', ' ', $text);// Trim spaces bewtween words
+
+        return $text;
+    }
+
+    public function assertBodyHasText($needle)
+    {
+        $text = $this->getBodyText();
 
         $needle = (array)$needle;
 
