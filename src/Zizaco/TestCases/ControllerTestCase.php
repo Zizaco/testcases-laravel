@@ -43,7 +43,7 @@ class ControllerTestCase extends TestCase{
 
     /**
      * Request an URL by the action name
-     * 
+     *
      * @param string $method
      * @param string $action
      * @return ControllerTestCase this for method chaining.
@@ -60,7 +60,7 @@ class ControllerTestCase extends TestCase{
 
     /**
      * Request an URL
-     * 
+     *
      * @param string $method
      * @param string $url
      * @return ControllerTestCase this for method chaining.
@@ -85,7 +85,7 @@ class ControllerTestCase extends TestCase{
     /**
      * Set the post parameters and return this for chainable
      * method call
-     * 
+     *
      * @param array $params Post paratemers array.
      * @return mixed this.
      */
@@ -165,7 +165,7 @@ class ControllerTestCase extends TestCase{
 
     /**
      * Asserts if the session variable is correct
-     * 
+     *
      * @param string $name  Session variable name.
      * @param mixed $value Session variable value.
      * @return void.
@@ -214,6 +214,17 @@ class ControllerTestCase extends TestCase{
 
         foreach ($needle as $singleNiddle) {
             $this->assertContains($singleNiddle, $text, "Body text does not contain '$singleNiddle'");
+        }
+    }
+
+    public function assertBodyHasNotText($needle)
+    {
+        $text = $this->getBodyText();
+
+        $needle = (array)$needle;
+
+        foreach ($needle as $singleNiddle) {
+            $this->assertNotContains($singleNiddle, $text, "Body text does not contain '$singleNiddle'");
         }
     }
 }
