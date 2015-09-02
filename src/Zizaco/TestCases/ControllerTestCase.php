@@ -1,16 +1,18 @@
 <?php namespace Zizaco\TestCases;
 
+use Session;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Route, Config, URL, Session;
+use URL;
 
-class ControllerTestCase extends TestCase{
+class ControllerTestCase extends TestCase
+{
 
     /**
      * Will contain the parameters of the next request
      *
      * @var array
      */
-    protected $requestInput = array();
+    protected $requestInput = [];
 
     /**
      * Will the last HttpException caught
@@ -20,42 +22,30 @@ class ControllerTestCase extends TestCase{
     protected $lastException;
 
     /**
-     * The Synfony's DomCrawler of the last request
+     * The Symfony's DomCrawler of the last request
      *
-     * @var Symfony\Component\DomCrawler\Crawler
+     * @var \Symfony\Component\DomCrawler\Crawler
      */
     protected $crawler;
-
-    /**
-     * Set session and enable Laravel filters
-     *
-     */
-    public function setUp()
-    {
-        parent::setUp();
-
-        // Enable filters
-        Route::enableFilters();
-
-        // Set session driver as array
-        Config::set('session.driver', 'array');
-    }
 
     /**
      * Request an URL by the action name
      *
      * @param string $method
      * @param string $action
+     * @param array  $params
+     *
      * @return ControllerTestCase this for method chaining.
      */
-    public function requestAction( $method, $action, $params = array())
+    public function requestAction($method, $action, $params = [])
     {
-        $action_url = URL::action($action, $params);
+        $actionUrl = URL::action($action, $params);
 
-        if( $action_url == '' )
+        if (! $actionUrl) {
             trigger_error("Action '$action' does not exist");
+        }
 
-        return $this->requestUrl( $method, $action_url, $params );
+        return $this->requestUrl($method, $actionUrl, $params);
     }
 
     /**
@@ -63,18 +53,20 @@ class ControllerTestCase extends TestCase{
      *
      * @param string $method
      * @param string $url
+     * @param array  $params
+     *
      * @return ControllerTestCase this for method chaining.
      */
-    public function requestUrl( $method, $url, $params = array() )
+    public function requestUrl($method, $url, $params = [])
     {
-        try
-        {
-            // The following method returns Synfony's DomCrawler
-            $this->crawler =
-                $this->client->request( $method, $url, array_merge($params, $this->requestInput) );
-        }
-        catch(\HttpException $e)
-        {
+        try {
+            // The following method returns Symfony's DomCrawler
+            $this->crawler = $this->call(
+                $method,
+                $url,
+                array_merge($params, $this->requestInput)
+            );
+        } catch (HttpException $e) {
             // Store the HttpException in order to check it later
             $this->lastException = $e;
         }
@@ -86,10 +78,11 @@ class ControllerTestCase extends TestCase{
      * Set the post parameters and return this for chainable
      * method call
      *
-     * @param array $params Post paratemers array.
+     * @param array $params Post parameters array.
+     *
      * @return mixed this.
      */
-    public function withInput( $params )
+    public function withInput($params)
     {
         $this->requestInput = $params;
 
@@ -99,21 +92,19 @@ class ControllerTestCase extends TestCase{
     /**
      * Asserts if the status code is correct
      *
-     * @param $code Correct status code
+     * @param int $code Correct status code
+     *
      * @return void
      */
-    public function assertStatusCode( $code )
+    public function assertStatusCode($code)
     {
-        if($this->lastException)
-        {
+        if ($this->lastException) {
             $realCode = $this->lastException->getStatusCode();
-        }
-        else
-        {
-            $realCode = $this->client->getResponse()->getStatusCode();
+        } else {
+            $realCode = $this->response->getStatusCode();
         }
 
-        $this->assertEquals( $code, $realCode, "Response was not $code, status code was $realCode" );
+        $this->assertEquals($code, $realCode, "Response was not $code, status code was $realCode");
     }
 
     /**
@@ -123,42 +114,38 @@ class ControllerTestCase extends TestCase{
      */
     public function assertRequestOk()
     {
-        $this->assertStatusCode( 200 );
+        $this->assertStatusCode(200);
     }
 
     /**
      * Asserts if page was redirected correctly
      *
-     * @param $location Location where it should be redirected
+     * @param string $location Location where it should be redirected
+     *
      * @return void
      */
-    public function assertRedirection( $location = null )
+    public function assertRedirection($location = null)
     {
-        $response = $this->client->getResponse();
-
-        if($this->lastException)
-        {
+        if ($this->lastException) {
             $statusCode = $this->lastException->getStatusCode();
-        }
-        elseif( $response )
-        {
-            $statusCode = $response->getStatusCode();
-        }
-        else
-        {
-            $statisCode = null;
+        } elseif ($this->response) {
+            $statusCode = $this->response->getStatusCode();
+        } else {
+            $statusCode = null;
         }
 
-        $isRedirection = in_array($statusCode, array(201, 301, 302, 303, 307, 308));
+        $isRedirection = in_array($statusCode, [201, 301, 302, 303, 307, 308]);
 
-        $this->assertTrue( $isRedirection, "Last request was not a redirection. Status code was ".$statusCode );
+        $this->assertTrue($isRedirection, "Last request was not a redirection. Status code was " . $statusCode);
 
-        if( $location )
-        {
-            if(! strpos( $location, '://' ))
-                $location = 'http://:'.$location;
+        if ($location) {
+            if (! strpos($location, '://')) {
+                $location = 'http://:' . $location;
+            }
 
-            $this->assertEquals( $location, $response->headers->get('Location'), 'Page was not redirected to the correct place' );
+            $this->assertEquals(
+                $location, $this->response->headers->get('Location'), 'Page was not redirected to the correct place'
+            );
         }
 
     }
@@ -167,16 +154,16 @@ class ControllerTestCase extends TestCase{
      * Asserts if the session variable is correct
      *
      * @param string $name  Session variable name.
-     * @param mixed $value Session variable value.
+     * @param mixed  $value Session variable value.
+     *
      * @return void.
      */
-    public function assertSessionHas( $name, $value = null )
+    public function assertSessionHas($name, $value = null)
     {
-        $this->assertTrue( Session::has($name), "Session doens't contain '$name'" );
+        $this->assertTrue(Session::has($name), "Session doesn't contain '$name'");
 
-        if( $value )
-        {
-            $this->assertContains( $value, Session::get($name), "Session '$name' are not equal to $value" );
+        if ($value) {
+            $this->assertContains($value, Session::get($name), "Session '$name' are not equal to $value");
         }
     }
 
@@ -189,10 +176,10 @@ class ControllerTestCase extends TestCase{
     {
         $html = $this->getBodyHtml();
 
-        $needle = (array)$needle;
+        $needle = (array) $needle;
 
-        foreach ($needle as $singleNiddle) {
-            $this->assertContains($singleNiddle, $html, "Body text does not contain '$singleNiddle'");
+        foreach ($needle as $singleNeedle) {
+            $this->assertContains($singleNeedle, $html, "Body text does not contain '$singleNeedle'");
         }
     }
 
@@ -201,7 +188,7 @@ class ControllerTestCase extends TestCase{
         $text = $this->getBodyHtml();
         $text = strip_tags($text); // Strip tags
         $text = str_replace("\n", " ", $text); // Replaces newline with space
-        $text = preg_replace('/\s\s+/', ' ', $text);// Trim spaces bewtween words
+        $text = preg_replace('/\s\s+/', ' ', $text);// Trim spaces between words
 
         return $text;
     }
@@ -210,10 +197,10 @@ class ControllerTestCase extends TestCase{
     {
         $text = $this->getBodyText();
 
-        $needle = (array)$needle;
+        $needle = (array) $needle;
 
-        foreach ($needle as $singleNiddle) {
-            $this->assertContains($singleNiddle, $text, "Body text does not contain '$singleNiddle'");
+        foreach ($needle as $singleNeedle) {
+            $this->assertContains($singleNeedle, $text, "Body text does not contain '$singleNeedle'");
         }
     }
 
@@ -221,10 +208,10 @@ class ControllerTestCase extends TestCase{
     {
         $text = $this->getBodyText();
 
-        $needle = (array)$needle;
+        $needle = (array) $needle;
 
-        foreach ($needle as $singleNiddle) {
-            $this->assertNotContains($singleNiddle, $text, "Body text does not contain '$singleNiddle'");
+        foreach ($needle as $singleNeedle) {
+            $this->assertNotContains($singleNeedle, $text, "Body text does not contain '$singleNeedle'");
         }
     }
 }
